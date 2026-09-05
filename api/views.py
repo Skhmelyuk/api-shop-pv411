@@ -2,25 +2,27 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
 from .models import Product, Order
 from .serializers import ProductSerializer, OrderSerializer
-from rest_framework.response import Response
+
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
+
+from rest_framework import generics
 
 
-@api_view(["GET"])
-def product_list(request):
-    products = Product.objects.all()
-    serialiser = ProductSerializer(products, many=True)
-    return Response(serialiser.data)
+class ProductCreateListAPIView(generics.ListCreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
-@api_view(['GET'])
-def product_detail(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    serializer = ProductSerializer(product)
-    return Response(serializer.data)
+
+class ProductDetailDeleteUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated]
 
 
-@api_view(['GET'])
-def order_list(request):
-    orders = Order.objects.all()
-    serializer = OrderSerializer(orders, many=True)
-    return Response(serializer.data)
+
+class OrderListAPIView(generics.ListAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+

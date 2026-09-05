@@ -5,7 +5,7 @@ from .models import Product, Order, OrderItem
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['name', 'description', 'price', 'stock']
+        fields = ['id', 'name', 'description', 'price', 'stock']
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -28,10 +28,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
 
-
     items = OrderItemSerializer(many=True, read_only=True)
     total_price = serializers.SerializerMethodField(method_name='total')
-
 
     def total(self, obj):
         order_items = obj.items.all()

@@ -1,0 +1,75 @@
+
+GET http://127.0.0.1:8000/api/products/
+Content-Type: application/json
+
+###
+
+GET http://127.0.0.1:8000/api/products/14/
+Content-Type: application/json
+
+
+###
+
+PUT http://127.0.0.1:8000/api/products/10/
+Content-Type: application/json
+
+{
+    "name": "Product 10",
+    "description": "sdfsd sdf sd sd fsd fsd",
+    "price": "4578.56",
+    "stock": 15
+}
+
+###
+
+PATCH  http://127.0.0.1:8000/api/products/14/
+Content-Type: application/json
+
+{
+    "stock": 1000,
+    "price": 120
+}
+
+###
+
+DELETE  http://127.0.0.1:8000/api/products/17/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg4NjE5Nzk3LCJpYXQiOjE3ODg2MTk0OTcsImp0aSI6IjljMTNlODYxZjhkZDRjMTU4MDJkYzYzNTE0ZmUzMmNlIiwidXNlcl9pZCI6IjIifQ.24FVfPr3ka28keIlWgHgaNzB8D7Tl3ozw0IDoJvLaoE
+
+
+###
+
+GET http://127.0.0.1:8000/api/orders/
+Content-Type: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/products/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg4NjE5Nzk3LCJpYXQiOjE3ODg2MTk0OTcsImp0aSI6IjljMTNlODYxZjhkZDRjMTU4MDJkYzYzNTE0ZmUzMmNlIiwidXNlcl9pZCI6IjIifQ.24FVfPr3ka28keIlWgHgaNzB8D7Tl3ozw0IDoJvLaoE
+
+{
+    "name": "Чай зелений",
+    "description": "Хороший чай!!!!!",
+    "price": "80",
+    "stock": 100
+}
+
+###
+
+POST http://127.0.0.1:8000/api/token/
+Content-Type: application/json
+
+{
+    "username": "admin",
+    "password": "admin123"
+}
+
+###
+
+POST http://127.0.0.1:8000/api/token/refresh/
+Content-Type: application/json
+
+{
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4ODcwNTczNSwiaWF0IjoxNzg4NjE5MzM1LCJqdGkiOiIyNDQ2NjI0OWY2NWU0ZjA0ODkxMzk3MWVhNjc3MDdjMSIsInVzZXJfaWQiOiIyIn0.ekAT8D6zwUn-c-c5sliBIbDrMUiJ0DhsDv5GjPxWGuI"
+}
