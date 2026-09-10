@@ -2,15 +2,20 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
 from .models import Product, Order
 from .serializers import ProductSerializer, OrderSerializer
-
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
-
+from .filters import ProductFilter, InStockFilterBackend 
 from rest_framework import generics
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class ProductCreateListAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    filterset_class = ProductFilter
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter, InStockFilterBackend]
+    search_fields = ['name', 'description']
+    ordering_fields = ['price', 'stock']
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]
