@@ -1,62 +1,9 @@
+### ==========================================
+### 1. Отримання JWT токенів
+### ==========================================
 
-GET http://127.0.0.1:8000/api/products/
-Content-Type: application/json
-
-###
-
-GET http://127.0.0.1:8000/api/products/14/
-Content-Type: application/json
-
-
-###
-
-PUT http://127.0.0.1:8000/api/products/10/
-Content-Type: application/json
-
-{
-    "name": "Product 10",
-    "description": "sdfsd sdf sd sd fsd fsd",
-    "price": "4578.56",
-    "stock": 15
-}
-
-###
-
-PATCH  http://127.0.0.1:8000/api/products/14/
-Content-Type: application/json
-
-{
-    "stock": 1000,
-    "price": 120
-}
-
-###
-
-DELETE  http://127.0.0.1:8000/api/products/17/
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg4NjE5Nzk3LCJpYXQiOjE3ODg2MTk0OTcsImp0aSI6IjljMTNlODYxZjhkZDRjMTU4MDJkYzYzNTE0ZmUzMmNlIiwidXNlcl9pZCI6IjIifQ.24FVfPr3ka28keIlWgHgaNzB8D7Tl3ozw0IDoJvLaoE
-
-
-###
-
-GET http://127.0.0.1:8000/api/orders/
-Content-Type: application/json
-
-###
-
-POST http://127.0.0.1:8000/api/products/
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg4NjE5Nzk3LCJpYXQiOjE3ODg2MTk0OTcsImp0aSI6IjljMTNlODYxZjhkZDRjMTU4MDJkYzYzNTE0ZmUzMmNlIiwidXNlcl9pZCI6IjIifQ.24FVfPr3ka28keIlWgHgaNzB8D7Tl3ozw0IDoJvLaoE
-
-{
-    "name": "Чай зелений",
-    "description": "Хороший чай!!!!!",
-    "price": "80",
-    "stock": 100
-}
-
-###
-
+### Отримати токен для Адміністратора (admin)
+# @name loginAdmin
 POST http://127.0.0.1:8000/api/token/
 Content-Type: application/json
 
@@ -65,11 +12,122 @@ Content-Type: application/json
     "password": "admin123"
 }
 
-###
+### Отримати токен для звичайного користувача (skhmelyuk)
+# @name loginUser
+POST http://127.0.0.1:8000/api/token/
+Content-Type: application/json
 
+{
+    "username": "skhmelyuk",
+    "password": "qwerty_1985"
+}
+
+### Оновлення access токена через refresh
 POST http://127.0.0.1:8000/api/token/refresh/
 Content-Type: application/json
 
 {
-    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4ODcwNTczNSwiaWF0IjoxNzg4NjE5MzM1LCJqdGkiOiIyNDQ2NjI0OWY2NWU0ZjA0ODkxMzk3MWVhNjc3MDdjMSIsInVzZXJfaWQiOiIyIn0.ekAT8D6zwUn-c-c5sliBIbDrMUiJ0DhsDv5GjPxWGuI"
+    "refresh": "{{loginAdmin.response.body.refresh}}"
 }
+
+
+
+### ==========================================
+### 2. Публічні запити (Товари - Доступно всім)
+### ==========================================
+
+### Перегляд списку товарів (без авторизації) -> 200 OK
+GET http://127.0.0.1:8000/api/products/
+Content-Type: application/json
+
+###
+
+### Перегляд одного товару (без авторизації) -> 200 OK
+GET http://127.0.0.1:8000/api/products/1/
+Content-Type: application/json
+
+
+### ==========================================
+### 3. Зміна товарів (Тільки для Адміністратора)
+### ==========================================
+
+### Спроба створити товар без токена -> 401 Unauthorized
+POST http://127.0.0.1:8000/api/products/
+Content-Type: application/json
+
+{
+    "name": "Анонімний товар",
+    "description": "Тест",
+    "price": "100.00",
+    "stock": 10
+}
+
+###
+
+### Спроба створити товар звичайним користувачем -> 403 Forbidden
+POST http://127.0.0.1:8000/api/products/
+Content-Type: application/json
+Authorization: Bearer {{loginUser.response.body.access}}
+
+{
+    "name": "Товар від клієнта",
+    "description": "Спроба створення без прав адміністратора",
+    "price": "250.00",
+    "stock": 5
+}
+
+###
+
+### Створення товару Адміністратором -> 201 Created
+POST http://127.0.0.1:8000/api/products/
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.access}}
+
+{
+    "name": "Чай",
+    "description": "Високогірний органічний зелений чай",
+    "price": "120.00",
+    "stock": 50
+}
+
+###
+
+### Оновлення товару Адміністратором -> 200 OK
+PATCH http://127.0.0.1:8000/api/products/19/
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.access}}
+
+{
+    "stock": 25,
+    "price": "46000.00"
+}
+
+###
+
+### Видалення товару Адміністратором -> 204 No Content
+DELETE http://127.0.0.1:8000/api/products/19/
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.access}}
+
+
+### ==========================================
+### 4. Замовлення (Тільки для авторизованих)
+### ==========================================
+
+### Спроба переглянути замовлення без токена -> 401 Unauthorized
+GET http://127.0.0.1:8000/api/orders/
+Content-Type: application/json
+
+###
+
+### Перегляд замовлень звичайним користувачем (бачить лише власні) -> 200 OK
+GET http://127.0.0.1:8000/api/orders/
+Content-Type: application/json
+Authorization: Bearer {{loginUser.response.body.access}}
+
+###
+
+### Перегляд замовлень Адміністратором (бачить усі замовлення магазину) -> 200 OK
+GET http://127.0.0.1:8000/api/orders/
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.access}}

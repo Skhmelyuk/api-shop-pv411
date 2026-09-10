@@ -7,6 +7,22 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['id', 'name', 'description', 'price', 'stock']
 
+    def validate_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Ціна товару повинна бути більшою за нуль.")
+        return value
+
+    def validate_stock(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Кількість товару повинна бути більшою за нуль.")
+        return value
+
+    def validate_name(self, value):
+        if len(value) <= 5 and len(value) >= 50:
+            raise serializers.ValidationError("Назва товару не може бути порожньою.")
+        return value
+
+
 
 class OrderItemSerializer(serializers.ModelSerializer):
 
