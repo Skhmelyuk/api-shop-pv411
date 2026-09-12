@@ -9,6 +9,43 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.reverse import reverse
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def api_root(request, format=None):
+    """
+    Головна точка входу Shop API.
+    Повертає клікабельну карту всіх доступних сервісів.
+    """
+    return Response({
+        'status': 'online',
+        'documentation': {
+            'swagger_ui': reverse('swagger-ui', request=request, format=format),
+            'redoc': reverse('redoc', request=request, format=format),
+            'schema': reverse('schema', request=request, format=format),
+        },
+        'auth': {
+            # 'register': reverse('api:user_register', request=request, format=format),
+            'token_obtain': reverse('token_obtain_pair', request=request, format=format),
+            'token_refresh': reverse('token_refresh', request=request, format=format),
+        },
+        'resources': {
+            'products': reverse('api:product_list', request=request, format=format),
+            'orders': reverse('api:order_list', request=request, format=format),
+            'user_orders': reverse('api:user_order_list', request=request, format=format),
+        },
+        'admin': request.build_absolute_uri('/admin/'),
+    })
+
+def landing_page(request):
+    """Головна титульна сторінка API (Developer Portal)."""
+    return render(request, 'index.html')
+
+
 class ProductCreateListAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -16,6 +53,7 @@ class ProductCreateListAPIView(generics.ListCreateAPIView):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter, InStockFilterBackend]
     search_fields = ['name', 'description']
     ordering_fields = ['price', 'stock']
+    throttle_scope = 'products' 
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]
@@ -28,6 +66,7 @@ class ProductCreateListAPIView(generics.ListCreateAPIView):
 class ProductDetailDeleteUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    throttle_scope = 'product_detail' 
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]
@@ -41,6 +80,7 @@ class OrderListAPIView(generics.ListAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsAdminUser]
+    throttle_scope = 'order_all_list' 
 
 
 class UserOrderListAPIView(generics.ListAPIView):
@@ -48,6 +88,7 @@ class UserOrderListAPIView(generics.ListAPIView):
     queryset = Order.objects.prefetch_related('items__product').all()
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
+    throttle_scope = 'user_order' 
 
     def get_queryset(self):
         # Фільтруємо замовлення за поточним користувачем із JWT-токена

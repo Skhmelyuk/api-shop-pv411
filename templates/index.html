@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop API — Developer Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border-card: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #38bdf8;
+            --primary-hover: #0284c7;
+            --accent-green: #22c55e;
+            --badge-get: #0284c7;
+            --badge-post: #16a34a;
+            --badge-put: #d97706;
+            --badge-delete: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1050px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            margin-bottom: 1rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-green);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.15);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-link {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .section-title {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .endpoints-table {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .table-row {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--border-card);
+            gap: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .table-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .method {
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .method.get { background: rgba(2, 132, 199, 0.2); color: var(--primary); }
+        .method.post { background: rgba(22, 163, 74, 0.2); color: #4ade80; }
+        .method.put { background: rgba(217, 119, 6, 0.2); color: #fbbf24; }
+        .method.delete { background: rgba(220, 38, 38, 0.2); color: #f87171; }
+
+        .path {
+            font-family: monospace;
+            font-weight: 600;
+            color: var(--text-main);
+            min-width: 260px;
+        }
+
+        .path a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .path a:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .desc {
+            color: var(--text-muted);
+            flex: 1;
+        }
+
+        .auth-tag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            background: #334155;
+            color: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-card);
+            padding-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="badge-status">
+                <span class="status-dot"></span>
+                Shop API v1.0 • System Online
+            </div>
+            <h1>Shop API Developer Portal</h1>
+            <p class="subtitle">Ласкаво просимо до REST API інтернет-магазину. Використовуйте інтерактивну документацію для тестування ендпоінтів або перейдіть до керування магазином.</p>
+        </header>
+
+        <div class="grid-cards">
+            <a href="/api/schema/swagger-ui/" class="card">
+                <div>
+                    <div class="card-icon">⚡</div>
+                    <div class="card-title">Swagger UI</div>
+                    <div class="card-desc">Інтерактивна документація OpenAPI. Тестуйте будь-які ендпоінти безпосередньо з браузера.</div>
+                </div>
+                <div class="card-link">Перейти до Swagger &rarr;</div>
+            </a>
+
+            <a href="/api/schema/redoc/" class="card">
+                <div>
+                    <div class="card-icon">📖</div>
+                    <div class="card-title">ReDoc</div>
+                    <div class="card-desc">Зручна технічна специфікація з детальною навігацією по моделях даних та відповідях API.</div>
+                </div>
+                <div class="card-link">Читати ReDoc &rarr;</div>
+            </a>
+
+            <a href="/admin/" class="card">
+                <div>
+                    <div class="card-icon">🛠️</div>
+                    <div class="card-title">Django Admin</div>
+                    <div class="card-desc">Панель адміністратора для керування товарами, замовленнями, цінами та користувачами.</div>
+                </div>
+                <div class="card-link">Увійти в адмінку &rarr;</div>
+            </a>
+
+            <a href="/api/products/" class="card">
+                <div>
+                    <div class="card-icon">📦</div>
+                    <div class="card-title">Товари (Products)</div>
+                    <div class="card-desc">Каталог товарів у форматі JSON з підтримкою фільтрації, сортування та пагінації.</div>
+                </div>
+                <div class="card-link">Переглянути JSON &rarr;</div>
+            </a>
+        </div>
+
+        <div class="section-title">
+            <span>🚀</span> Основні Endpoints
+        </div>
+
+        <div class="endpoints-table">
+            <div class="table-row">
+                <span class="method get">GET</span>
+                <span class="path"><a href="/api/products/">/api/products/</a></span>
+                <span class="desc">Список товарів (пошук, фільтри, пагінація)</span>
+                <span class="auth-tag">AllowAny</span>
+            </div>
+            <div class="table-row">
+                <span class="method post">POST</span>
+                <span class="path"><a href="/api/register/">/api/register/</a></span>
+                <span class="desc">Реєстрація нового користувача в системі</span>
+                <span class="auth-tag">AllowAny</span>
+            </div>
+            <div class="table-row">
+                <span class="method post">POST</span>
+                <span class="path"><a href="/api/token/">/api/token/</a></span>
+                <span class="desc">Отримання пари JWT токенів (Access + Refresh)</span>
+                <span class="auth-tag">AllowAny</span>
+            </div>
+            <div class="table-row">
+                <span class="method post">POST</span>
+                <span class="path"><a href="/api/token/refresh/">/api/token/refresh/</a></span>
+                <span class="desc">Оновлення Access токена через Refresh токен</span>
+                <span class="auth-tag">AllowAny</span>
+            </div>
+            <div class="table-row">
+                <span class="method get">GET</span>
+                <span class="path"><a href="/api/user-orders/">/api/user-orders/</a></span>
+                <span class="desc">Історія замовлень авторизованого користувача</span>
+                <span class="auth-tag">JWT Bearer</span>
+            </div>
+            <div class="table-row">
+                <span class="method get">GET</span>
+                <span class="path"><a href="/api/orders/">/api/orders/</a></span>
+                <span class="desc">Усі замовлення магазину (для менеджерів)</span>
+                <span class="auth-tag">IsAdminUser</span>
+            </div>
+            <div class="table-row">
+                <span class="method get">GET</span>
+                <span class="path"><a href="/api/schema/">/api/schema/</a></span>
+                <span class="desc">Завантаження OpenAPI специфікації (YAML)</span>
+                <span class="auth-tag">AllowAny</span>
+            </div>
+        </div>
+
+        <footer>
+            <p>Django REST Framework • drf-spectacular • SimpleJWT • Python 3.12+</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -2,6 +2,8 @@
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from django.views.generic import RedirectView
+from api.views import api_root, landing_page
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -9,6 +11,8 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
+    path('', landing_page, name='lending_page'),
+    path('api/', api_root, name='root_redirect'),
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
