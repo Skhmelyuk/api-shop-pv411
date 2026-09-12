@@ -1,4 +1,53 @@
 ### ==========================================
+### 0. Головна сторінка & Точка входу API
+### ==========================================
+
+### Відкриття Developer Portal (200 OK)
+GET http://127.0.0.1:8000/
+
+###
+
+### Навігаційна карта API Root (200 OK)
+GET http://127.0.0.1:8000/api/
+
+###
+
+### Інтерфейс профілювання Django Silk
+GET http://127.0.0.1:8000/silk/
+
+
+### ==========================================
+### 0.1. Реєстрація нового користувача (Урок 21)
+### ==========================================
+
+### Успішна реєстрація нового користувача -> 201 Created
+# @name registerUser
+POST http://127.0.0.1:8000/api/register/
+Content-Type: application/json
+
+{
+    "username": "ivan_student",
+    "email": "ivan.student@example.com",
+    "password": "SuperSecretPass123!",
+    "password_confirm": "SuperSecretPass123!"
+}
+
+###
+
+### Помилка: Паролі не співпадають -> 400 Bad Request
+POST http://127.0.0.1:8000/api/register/
+Content-Type: application/json
+
+{
+    "username": "fail_user",
+    "email": "fail@example.com",
+    "password": "Password123!",
+    "password_confirm": "WrongPassword999!"
+}
+
+###
+
+### ==========================================
 ### 1. Отримання JWT токенів
 ### ==========================================
 
@@ -36,8 +85,14 @@ Content-Type: application/json
 ### 2. Публічні запити (Товари - Доступно всім)
 ### ==========================================
 
-### Перегляд списку товарів (без авторизації) -> 200 OK
+### Перегляд списку товарів (без авторизації, сторінка 1) -> 200 OK
 GET http://127.0.0.1:8000/api/products/
+Content-Type: application/json
+
+###
+
+### Перегляд наступної сторінки пагінації (сторінка 2) -> 200 OK
+GET http://127.0.0.1:8000/api/products/?page=2
 Content-Type: application/json
 
 ###
