@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
-from .models import Product, Order, OrderItem
+from django.db import transaction
+from .models import Category, Product, ProductImage, ProductSpecification, Order, OrderItem
 
 User = get_user_model()
 
@@ -48,10 +49,71 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return user
 
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'slug', 'parent', 'image', 'order']
+
+
+class CategoryTreeSerializer(serializers.ModelSerializer):
+    children = CategorySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'slug', 'image', 'order', 'children']
+
+
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image', 'order']
+
+
+class ProductSpecificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductSpecification
+        fields = ['name', 'value', 'order']
+
+
 class ProductSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True, default=None)
+    images = ProductImageSerializer(many=True, read_only=True)
+    specifications = ProductSpecificationSerializer(many=True, required=False)
+
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'stock']
+        fields = [
+            'id', 'name', 'category', 'category_name', 'brand', 'description',
+            'price', 'stock', 'is_new', 'image', 'images', 'instruction', 'specifications',
+        ]
+
+    def validate_specifications(self, value):
+        names = [spec['name'] for spec in value]
+        if len(names) != len(set(names)):
+            raise serializers.ValidationError("Назви характеристик не повинні повторюватися.")
+        return value
+
+    @transaction.atomic
+    def create(self, validated_data):
+        specifications = validated_data.pop('specifications', [])
+        product = super().create(validated_data)
+        self._save_specifications(product, specifications)
+        return product
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        specifications = validated_data.pop('specifications', None)
+        product = super().update(instance, validated_data)
+        if specifications is not None:
+            product.specifications.all().delete()
+            self._save_specifications(product, specifications)
+        return product
+
+    @staticmethod
+    def _save_specifications(product, specifications):
+        ProductSpecification.objects.bulk_create(
+            ProductSpecification(product=product, **spec) for spec in specifications
+        )
 
     def validate_price(self, value):
         if value <= 0:

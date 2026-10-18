@@ -4,28 +4,25 @@ info:
   version: 1.0.0
   description: My Shop API
 paths:
-  /api/orders/:
+  /api/:
     get:
-      operationId: orders_list
-      tags:
-      - orders
+      operationId: root_retrieve
+      description: |-
+        Головна точка входу Shop API.
+        Повертає клікабельну карту всіх доступних сервісів.
       security:
       - jwtAuth: []
       - cookieAuth: []
+      - {}
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Order'
-          description: ''
-  /api/products/:
+          description: No response body
+  /api/categories/:
     get:
-      operationId: products_list
+      operationId: categories_list
+      description: 'Дерево категорій: групи верхнього рівня з вкладеними підкатегоріями.'
       tags:
-      - products
+      - categories
       security:
       - jwtAuth: []
       - cookieAuth: []
@@ -37,7 +34,132 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Product'
+                  $ref: '#/components/schemas/CategoryTree'
+          description: ''
+  /api/categories/{slug}/:
+    get:
+      operationId: categories_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - categories
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/orders/:
+    get:
+      operationId: orders_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrderList'
+          description: ''
+  /api/products/:
+    get:
+      operationId: products_list
+      parameters:
+      - in: query
+        name: brand__iexact
+        schema:
+          type: string
+      - in: query
+        name: category
+        schema:
+          type: integer
+      - in: query
+        name: category_slug
+        schema:
+          type: string
+        description: Slug категорії (включно з підкатегоріями)
+      - in: query
+        name: is_new
+        schema:
+          type: boolean
+      - in: query
+        name: name__icontains
+        schema:
+          type: string
+      - in: query
+        name: name__iexact
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: price
+        schema:
+          type: number
+      - in: query
+        name: price__gt
+        schema:
+          type: number
+      - in: query
+        name: price__lt
+        schema:
+          type: number
+      - in: query
+        name: price__range
+        schema:
+          type: array
+          items:
+            type: number
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProductList'
           description: ''
     post:
       operationId: products_create
@@ -166,6 +288,35 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/register/:
+    post:
+      operationId: register_create
+      description: Реєстрація нового користувача через API
+      tags:
+      - register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegister'
+          description: ''
   /api/token/:
     post:
       operationId: token_create
@@ -224,6 +375,13 @@ paths:
     get:
       operationId: user_orders_list
       description: Список замовлень поточного авторизованого користувача
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
       tags:
       - user-orders
       security:
@@ -234,12 +392,82 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Order'
+                $ref: '#/components/schemas/PaginatedOrderList'
           description: ''
 components:
   schemas:
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Назва
+          maxLength: 100
+        slug:
+          oneOf:
+          - type: string
+            pattern: ^[-\w]+$
+            maxLength: 120
+          - type: string
+            maxLength: 0
+        parent:
+          type: integer
+          nullable: true
+          title: Батьківська категорія
+        image:
+          type: string
+          format: uri
+          nullable: true
+          title: Зображення
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Порядок
+      required:
+      - id
+      - name
+    CategoryTree:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Назва
+          maxLength: 100
+        slug:
+          oneOf:
+          - type: string
+            pattern: ^[-\w]+$
+            maxLength: 120
+          - type: string
+            maxLength: 0
+        image:
+          type: string
+          format: uri
+          nullable: true
+          title: Зображення
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Порядок
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+      required:
+      - children
+      - id
+      - name
     Order:
       type: object
       properties:
@@ -298,6 +526,52 @@ components:
       - item_subtotal
       - product_name
       - product_price
+    PaginatedOrderList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+    PaginatedProductList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
     PatchedProduct:
       type: object
       properties:
@@ -308,6 +582,17 @@ components:
           type: string
           title: Назва
           maxLength: 200
+        category:
+          type: integer
+          nullable: true
+          title: Категорія
+        category_name:
+          type: string
+          readOnly: true
+        brand:
+          type: string
+          title: Бренд
+          maxLength: 100
         description:
           type: string
           title: Опис
@@ -322,6 +607,28 @@ components:
           minimum: 0
           format: int64
           title: Кількість на складі
+        is_new:
+          type: boolean
+          title: Новинка
+        image:
+          type: string
+          format: uri
+          nullable: true
+          title: Зображення
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductImage'
+          readOnly: true
+        instruction:
+          type: string
+          format: uri
+          nullable: true
+          title: Інструкція
+        specifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductSpecification'
     Product:
       type: object
       properties:
@@ -332,6 +639,17 @@ components:
           type: string
           title: Назва
           maxLength: 200
+        category:
+          type: integer
+          nullable: true
+          title: Категорія
+        category_name:
+          type: string
+          readOnly: true
+        brand:
+          type: string
+          title: Бренд
+          maxLength: 100
         description:
           type: string
           title: Опис
@@ -346,12 +664,75 @@ components:
           minimum: 0
           format: int64
           title: Кількість на складі
+        is_new:
+          type: boolean
+          title: Новинка
+        image:
+          type: string
+          format: uri
+          nullable: true
+          title: Зображення
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductImage'
+          readOnly: true
+        instruction:
+          type: string
+          format: uri
+          nullable: true
+          title: Інструкція
+        specifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductSpecification'
       required:
+      - category_name
       - description
       - id
+      - images
       - name
       - price
       - stock
+    ProductImage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        image:
+          type: string
+          format: uri
+          title: Зображення
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Порядок
+      required:
+      - id
+      - image
+    ProductSpecification:
+      type: object
+      properties:
+        name:
+          type: string
+          title: Характеристика
+          maxLength: 100
+        value:
+          type: string
+          title: Значення
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Порядок
+      required:
+      - name
+      - value
     StatusEnum:
       enum:
       - pending
@@ -394,6 +775,40 @@ components:
       required:
       - access
       - refresh
+    UserRegister:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          title: Email address
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        password:
+          type: string
+          writeOnly: true
+          description: Пароль повинен бути надійним і містити щонайменше 8 символів.
+        password_confirm:
+          type: string
+          writeOnly: true
+          description: Повторіть пароль для підтвердження.
+      required:
+      - email
+      - id
+      - password
+      - password_confirm
+      - username
   securitySchemes:
     cookieAuth:
       type: apiKey

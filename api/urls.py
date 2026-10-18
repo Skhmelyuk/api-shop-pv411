@@ -1,6 +1,8 @@
 
 from django.urls import path
 from .views import (
+    CategoryTreeAPIView,
+    CategoryDetailAPIView,
     ProductCreateListAPIView,
     OrderListAPIView,
     ProductDetailDeleteUpdateAPIView,
@@ -12,6 +14,8 @@ app_name = "api"
 
 urlpatterns = [
     path('register/', UserRegisterAPIView.as_view(), name='user_register'),
+    path('categories/', CategoryTreeAPIView.as_view(), name='category_list'),
+    path('categories/<str:slug>/', CategoryDetailAPIView.as_view(), name='category_detail'),
     path('products/', ProductCreateListAPIView.as_view(), name='product_list'),
     path('products/<int:pk>/', ProductDetailDeleteUpdateAPIView.as_view(), name='product_detail'),
     path('orders/', OrderListAPIView.as_view(), name='order_list'),

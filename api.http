@@ -101,6 +101,30 @@ Content-Type: application/json
 GET http://127.0.0.1:8000/api/products/1/
 Content-Type: application/json
 
+###
+
+### Дерево категорій (групи + підкатегорії) -> 200 OK
+GET http://127.0.0.1:8000/api/categories/
+Content-Type: application/json
+
+###
+
+### Одна категорія за slug -> 200 OK
+GET http://127.0.0.1:8000/api/categories/refrigerators/
+Content-Type: application/json
+
+###
+
+### Товари групи разом із підкатегоріями -> 200 OK
+GET http://127.0.0.1:8000/api/products/?category_slug=major-appliances
+Content-Type: application/json
+
+###
+
+### Новинки бренду Liberty -> 200 OK
+GET http://127.0.0.1:8000/api/products/?brand__iexact=liberty&is_new=true
+Content-Type: application/json
+
 
 ### ==========================================
 ### 3. Зміна товарів (Тільки для Адміністратора)

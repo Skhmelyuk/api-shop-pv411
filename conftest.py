@@ -1,9 +1,18 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from rest_framework.test import APIClient
 from model_bakery import baker
 
 User = get_user_model()
+
+
+@pytest.fixture(autouse=True)
+def reset_throttle_cache():
+    """Скидає лічильники throttling між тестами, щоб ліміти не перетікали з тесту в тест."""
+    cache.clear()
+    yield
+    cache.clear()
 
 
 @pytest.fixture
