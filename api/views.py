@@ -1,8 +1,15 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth import get_user_model
 from rest_framework.decorators import api_view, permission_classes
-from .models import Product, Order
-from .serializers import ProductSerializer, OrderSerializer, UserRegisterSerializer
+from django.db.models import Prefetch
+from .models import Category, Product, Order
+from .serializers import (
+    CategorySerializer,
+    CategoryTreeSerializer,
+    ProductSerializer,
+    OrderSerializer,
+    UserRegisterSerializer,
+)
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
 from .filters import ProductFilter, InStockFilterBackend 
 from rest_framework import generics
@@ -42,6 +49,7 @@ def api_root(request, format=None):
             'token_refresh': reverse('token_refresh', request=request, format=format),
         },
         'resources': {
+            'categories': reverse('api:category_list', request=request, format=format),
             'products': reverse('api:product_list', request=request, format=format),
             'orders': reverse('api:order_list', request=request, format=format),
             'user_orders': reverse('api:user_order_list', request=request, format=format),
@@ -55,12 +63,34 @@ def landing_page(request):
     return render(request, 'index.html')
 
 
+class CategoryTreeAPIView(generics.ListAPIView):
+    """Дерево категорій: групи верхнього рівня з вкладеними підкатегоріями."""
+    queryset = Category.objects.filter(parent__isnull=True).prefetch_related(
+        Prefetch('children', queryset=Category.objects.order_by('order', 'name'))
+    )
+    serializer_class = CategoryTreeSerializer
+    permission_classes = [AllowAny]
+    pagination_class = None
+    throttle_scope = 'categories'
+
+
+class CategoryDetailAPIView(generics.RetrieveAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [AllowAny]
+    lookup_field = 'slug'
+    throttle_scope = 'categories'
+
+
+PRODUCT_QUERYSET = Product.objects.select_related('category').prefetch_related('images', 'specifications')
+
+
 class ProductCreateListAPIView(generics.ListCreateAPIView):
-    queryset = Product.objects.all().order_by('pk')
+    queryset = PRODUCT_QUERYSET.order_by('pk')
     serializer_class = ProductSerializer
     filterset_class = ProductFilter
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter, InStockFilterBackend]
-    search_fields = ['name', 'description']
+    search_fields = ['name', 'description', 'brand']
     ordering_fields = ['price', 'stock']
     throttle_scope = 'products' 
 
@@ -73,7 +103,7 @@ class ProductCreateListAPIView(generics.ListCreateAPIView):
 
 
 class ProductDetailDeleteUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Product.objects.all()
+    queryset = PRODUCT_QUERYSET
     serializer_class = ProductSerializer
     throttle_scope = 'product_detail' 
 
